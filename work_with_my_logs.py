@@ -56,7 +56,6 @@ class Work_With_My_Logs:
         return ['Событие не найдено'] * 12
 
 
-
 class FireFoxDriverWithProxy:
     def __init__(self, path_to_geckodriver, user_agent, proxy, proxy_login_and_password, type_of_account, final_balance, account_code_name, is_reversed):
         firefox_capabilities = webdriver.DesiredCapabilities.FIREFOX
