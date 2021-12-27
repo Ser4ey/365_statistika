@@ -133,8 +133,12 @@ def format_string(s: str):
 
 
 driver1 = get_new_accounts_from_info(
-    [info.user_name, info.password, '0.1', 'UK']
-)[0]
+    [
+        [info.user_name, info.password, '0.1', 'UK']
+    ],
+)
+
+driver1 = driver1[0]
 
 driver = driver1.driver
 
