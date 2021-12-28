@@ -334,7 +334,9 @@ for link1 in link_list:
 
     value_bet = 'Элемент не найден'  # общий размер ставки
     try:
-        value_bet = soup.find('td', class_='bet-confirmation-info-table-value-top').text
+        # old class
+        # value_bet = soup.find('td', class_='bet-confirmation-info-table-value-top').text
+        value_bet = soup.find('td', class_='bet-confirmation-amounts-table-value-top').text
         value_bet = format_string(value_bet)
 
         value_bet = conversion_val.value_bet_convert(value_bet)
@@ -346,7 +348,9 @@ for link1 in link_list:
 
     return_value = 'Элемент не найден'  # общий размер ставки
     try:
-        return_value = soup.find('td', class_='bet-confirmation-info-table-value bet-confirmation-info-table-value-single').text
+        # old class
+        # return_value = soup.find('td', class_='bet-confirmation-info-table-value bet-confirmation-info-table-value-single').text
+        return_value = soup.find('td', class_='bet-confirmation-amounts-table-value bet-confirmation-amounts-table-value-single').text
         return_value = format_string(return_value)
 
         return_value = conversion_val.return_val_convert(return_value)
