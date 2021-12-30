@@ -116,9 +116,6 @@ def google_table(line_for_google, a1,a2,a3,a4,a5,a6,a7,a8,a9,a10):
 line_for_google+=1
 
 
-
-
-
 def format_string(s: str):
     s = s.strip()
     category_name = s
@@ -128,8 +125,6 @@ def format_string(s: str):
             category_name = category_name.replace(item, "_")
     key = category_name
     return key
-
-
 
 
 driver1 = get_new_accounts_from_info(
@@ -192,22 +187,41 @@ driver.get(url)
 sleep(12)
 
 
-
 # input('Введите enter')
 # загрузка всего контента на странице
 
 counter = 0
 counter_to_count = 1
+
+
+
+
+
+
+
+
+
+
+
+# Get scroll height
+last_height = driver.execute_script("return document.body.scrollHeight")
 while counter < 3:
 # while counter < 3 and counter_to_count < 5:
     try:
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         driver.find_element_by_class_name('bet365-show-more-button').click()
         sleep(3)
-        counter = 0
-
         print(f'Загрузка контента {counter_to_count}')
-        counter_to_count+=1
+        counter_to_count += 1
+
+        # Calculate new scroll height and compare with last scroll height
+        new_height = driver.execute_script("return document.body.scrollHeight")
+        if new_height == last_height:
+            print(f'Весь контент загружен {counter}!')
+            counter += 1
+        else:
+            counter = 0
+        last_height = new_height
 
     except Exception as er:
         counter += 1
@@ -219,7 +233,6 @@ print(f'Загрузка контента завершена')
 
 # list_of_blocks = driver.find_elements_by_class_name('bet-summary')
 SportsBetting = []
-
 
 
 page_content = driver.page_source
