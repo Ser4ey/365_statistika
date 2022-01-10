@@ -2,7 +2,6 @@ from chrome_driver import GetWorkAccountsList, FireFoxDriverMainNoAutoOpen
 from time import sleep
 import time
 import info
-import work_with_my_logs
 from bs4 import BeautifulSoup
 import conversion_val
 from multiprocessing.dummy import Pool
@@ -88,10 +87,14 @@ values = service.spreadsheets().values().batchUpdate(
     body={
         "valueInputOption": "USER_ENTERED",
         "data": [
-            {f"range": f"A{1}:J{1}",
-             "majorDimension": "ROWS",
-             "values": [["код ставки", "дата", "время", "название команды-победителя", "коэффициент",
-                         "название команд общее", "победа/поражение", "сумма ставки", "сумма выигрыша", "исход"]]},
+            {f"range": f"A{1}:O{1}",
+                "majorDimension": "ROWS",
+                "values": [["код ставки", "дата", "время", "название команды-победителя", "коэффициент",
+                            "название команд общее", "победа/поражение", "сумма ставки", "сумма выигрыша", "исход",
+                            "БК1", "БК2", "коэффициент на БК2", "количество инициаторов на БК1",
+                            "количество инициаторов на БК2",
+
+]]},
 
         ]
     }
@@ -125,7 +128,7 @@ def google_table(line_for_google, a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14
         body={
             "valueInputOption": "USER_ENTERED",
             "data": [
-                {f"range": f"A{line_for_google}:J{line_for_google}",
+                {f"range": f"A{line_for_google}:O{line_for_google}",
                  "majorDimension": "ROWS",
                  "values": [[a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,a15]]},
 
