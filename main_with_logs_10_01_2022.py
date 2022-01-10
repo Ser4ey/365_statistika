@@ -1,20 +1,73 @@
-import json
-
+from chrome_driver import GetWorkAccountsList, FireFoxDriverMainNoAutoOpen
+from time import sleep
+import time
 import info
 import work_with_my_logs
-from selenium import webdriver
-from time import sleep
-from info import user_name, password, user_agent, proxy, proxy_login_and_pass, spreadsheet_id, firefox_binary
-import random
 from bs4 import BeautifulSoup
-import lxml
 import conversion_val
-
+from multiprocessing.dummy import Pool
 
 import httplib2
-# import apiclient.discovery
 from googleapiclient import discovery
 from oauth2client.service_account import ServiceAccountCredentials
+
+
+def log_in_driver(driver_class):
+    login = driver_class.bet365_login
+    passwd = driver_class.bet365_password
+    driver_class.log_in_bet365_v2(login, passwd)
+
+
+def get_new_accounts_from_info(list_of_start_info):
+    # запускаем аккаунты
+    List_of_bet_account = []
+    countries = []
+    Set_of_countries = set()
+
+    for i in list_of_start_info:
+        countries.append(i[3])
+
+    for i in countries:
+        Set_of_countries.add(i)
+
+    Dict_of_Drivers_count = {}
+
+    for i in Set_of_countries:
+        Dict_of_Drivers_count[i] = countries.count(i)
+
+    start_time_for_all = time.time()
+    for i in Set_of_countries:
+        print(f'Открываем {Dict_of_Drivers_count[i]} аккаунта для {i}')
+        start_time_for_type = time.time()
+        accounts_get_class = GetWorkAccountsList(number_of_accounts=Dict_of_Drivers_count[i], vpn_country=i)
+        Accounts = accounts_get_class.return_Browser_List()
+
+        for account_info in list_of_start_info:
+            bet365login, bet365password, bet_value, vpn_country = account_info
+            if vpn_country != i:
+                continue
+
+            driver_class = FireFoxDriverMainNoAutoOpen(
+                driver=Accounts.pop(-1),
+                login=bet365login,
+                password=bet365password,
+                bet_value=bet_value,
+                vpn_country=vpn_country
+            )
+
+            List_of_bet_account.append(driver_class)
+        print(f'{Dict_of_Drivers_count[i]} аккаунтов для {i} открыты за {time.time() - start_time_for_type}')
+
+    print(f'Все аккаунты успешно открыты за {time.time() - start_time_for_all}')
+    # авторизация аккаунтов
+    with Pool(processes=len(List_of_bet_account)) as p:
+        p.map(log_in_driver, List_of_bet_account)
+
+    print(f'Все аккаунты успешно авторизованы!')
+
+    return List_of_bet_account
+
+
 
 # Файл, полученный в Google Developer Console
 CREDENTIALS_FILE = 'creds.json'
@@ -31,21 +84,14 @@ service = discovery.build('sheets', 'v4', http = httpAuth)
 
 
 values = service.spreadsheets().values().batchUpdate(
-    spreadsheetId=spreadsheet_id,
+    spreadsheetId=info.spreadsheet_id,
     body={
         "valueInputOption": "USER_ENTERED",
         "data": [
-            {f"range": f"A{1}:V{1}",
+            {f"range": f"A{1}:J{1}",
              "majorDimension": "ROWS",
              "values": [["код ставки", "дата", "время", "название команды-победителя", "коэффициент",
-                         "название команд общее", "победа/поражение", "сумма ставки", "сумма выигрыша", "исход",
-
-
-                        'вид спорта', 'процент вилки', 'время жизни вилки', 'название противоположной бк',
-                         'команда 1', 'команда 2', 'вид ставки', 'коэффициент на Bet365', 'количество инициаторов у Bet365',
-                         'коэффициент противоположной БК', 'количество инициаторов противоположной БК', 'кто является инициатором'
-
-                         ]]},
+                         "название команд общее", "победа/поражение", "сумма ставки", "сумма выигрыша", "исход"]]},
 
         ]
     }
@@ -54,23 +100,39 @@ values = service.spreadsheets().values().batchUpdate(
 
 
 line_for_google = 1
-def google_table(line_for_google, a1,a2,a3,a4,a5,a6,a7,a8,a9,a10, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12):
+def google_table(line_for_google, a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,a15):
+    '''
+            код ставки
+            дата
+            время
+            название команды-победителя
+            коэффициент
+            название команд общее
+            победа/поражение
+            сумма ставки
+            сумма выигрыша
+            исход
+
+            БК1 (понятно, что это бет365, просто возможно в будущем будут добавляться еще БК в противовес)
+            БК2
+            БК2
+            количество инициаторов на БК1
+            Количество инициаторов на БК2
+
+    '''
     values = service.spreadsheets().values().batchUpdate(
-        spreadsheetId=spreadsheet_id,
+        spreadsheetId=info.spreadsheet_id,
         body={
             "valueInputOption": "USER_ENTERED",
             "data": [
-                {f"range": f"A{line_for_google}:V{line_for_google}",
+                {f"range": f"A{line_for_google}:J{line_for_google}",
                  "majorDimension": "ROWS",
-                 "values": [[a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12]]},
+                 "values": [[a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,a15]]},
 
             ]
         }
     ).execute()
 line_for_google+=1
-
-
-
 
 
 def format_string(s: str):
@@ -84,83 +146,17 @@ def format_string(s: str):
     return key
 
 
-# Загрузка информации из логов .csv
-my_log_master = work_with_my_logs.Work_With_My_Logs()
+driver1 = get_new_accounts_from_info(
+    [
+        [info.user_name, info.password, '0.1', 'UK']
+    ],
+)
+
+driver1 = driver1[0]
+
+driver = driver1.driver
 
 
-driver = work_with_my_logs.FireFoxDriverWithVPN()
-driver.log_in_bet365(info.user_name, info.password, '0')
-
-driver = driver.driver
-
-
-# firefox_capabilities = webdriver.DesiredCapabilities.FIREFOX
-# firefox_capabilities['marionette'] = True
-#
-# firefox_capabilities['proxy'] = {
-#     "proxyType": "MANUAL",
-#     "httpProxy": proxy,
-#     "ftpProxy": proxy,
-#     "sslProxy": proxy
-# }
-#
-# options = webdriver.FirefoxOptions()
-# options.set_preference("dom.webdriver.enabled", False)
-# options.set_preference("dom.webnotifications.enabled", False)
-# options.set_preference("general.useragent.override", user_agent)
-#
-# driver = webdriver.Firefox(capabilities=firefox_capabilities,
-#                              executable_path="geckodriver.exe",
-#                              firefox_binary=firefox_binary,
-#                              proxy=proxy,
-#                              options=options)
-#
-#
-#
-# sleep(1)
-# print(proxy_login_and_pass)
-# driver.get('https://2ip.ru')
-#
-# input('Введите данные от прокси и нажмите Enter')
-#
-#
-# driver.get('https://www.bet365.com/#/HO/')
-#
-# for i in range(10):
-#     try:
-#         driver.refresh()
-#         sleep(0.5)
-#     except:
-#         pass
-#
-#
-# sleep(5)
-#
-# # вход в аккамунт
-# while True:
-#     try:
-#         driver.find_element_by_class_name('hm-MainHeaderRHSLoggedOutWide_LoginContainer').click()
-#         break
-#     except:
-#         sleep(1)
-#
-#
-# sleep(5)
-#
-# while True:
-#     try:
-#         driver.find_element_by_class_name('lms-StandardLogin_Username').send_keys(user_name)
-#         sleep(0.7)
-#         driver.find_element_by_class_name('lms-StandardLogin_Password').send_keys(password)
-#         sleep(0.7)
-#         break
-#     except:
-#         sleep(1)
-#
-#
-# driver.find_element_by_class_name('lms-StandardLogin_LoginButton').click()
-# print('Вы успешно вошли в аккаунт')
-# sleep(12)
 
 try:
     # закрытие всплывающего окна
@@ -210,22 +206,32 @@ driver.get(url)
 sleep(12)
 
 
-
 # input('Введите enter')
 # загрузка всего контента на странице
 
 counter = 0
 counter_to_count = 1
+
+
+# Get scroll height
+last_height = driver.execute_script("return document.body.scrollHeight")
 while counter < 3:
 # while counter < 3 and counter_to_count < 5:
     try:
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         driver.find_element_by_class_name('bet365-show-more-button').click()
         sleep(3)
-        counter = 0
-
         print(f'Загрузка контента {counter_to_count}')
-        counter_to_count+=1
+        counter_to_count += 1
+
+        # Calculate new scroll height and compare with last scroll height
+        new_height = driver.execute_script("return document.body.scrollHeight")
+        if new_height == last_height:
+            print(f'Весь контент загружен {counter}!')
+            counter += 1
+        else:
+            counter = 0
+        last_height = new_height
 
     except Exception as er:
         counter += 1
@@ -237,7 +243,6 @@ print(f'Загрузка контента завершена')
 
 # list_of_blocks = driver.find_elements_by_class_name('bet-summary')
 SportsBetting = []
-
 
 
 page_content = driver.page_source
@@ -352,7 +357,9 @@ for link1 in link_list:
 
     value_bet = 'Элемент не найден'  # общий размер ставки
     try:
-        value_bet = soup.find('td', class_='bet-confirmation-info-table-value-top').text
+        # old class
+        # value_bet = soup.find('td', class_='bet-confirmation-info-table-value-top').text
+        value_bet = soup.find('td', class_='bet-confirmation-amounts-table-value-top').text
         value_bet = format_string(value_bet)
 
         value_bet = conversion_val.value_bet_convert(value_bet)
@@ -364,7 +371,9 @@ for link1 in link_list:
 
     return_value = 'Элемент не найден'  # общий размер ставки
     try:
-        return_value = soup.find('td', class_='bet-confirmation-info-table-value bet-confirmation-info-table-value-single').text
+        # old class
+        # return_value = soup.find('td', class_='bet-confirmation-info-table-value bet-confirmation-info-table-value-single').text
+        return_value = soup.find('td', class_='bet-confirmation-amounts-table-value bet-confirmation-amounts-table-value-single').text
         return_value = format_string(return_value)
 
         return_value = conversion_val.return_val_convert(return_value)
@@ -373,8 +382,6 @@ for link1 in link_list:
         print(er)
         pass
 
-    my_logs_data = my_log_master.get_info(row_eventname)
-    print(my_logs_data)
 
     print(id)
     print(data_day)
@@ -392,32 +399,26 @@ for link1 in link_list:
         print('Задание не действительно')
     else:
 
-        # SportsBetting.append({
-        #     "код ставки": id,
-        #     "дата": data_day,
-        #     "время": data_time,
-        #     "название команды-победителя": selectionname,
-        #     "коэффициент": row_odds,
-        #     "название команд общее": row_eventname,
-        #     "победа/поражение": game_or_not,
-        #     "сумма ставки": value_bet,
-        #     "сумма выигрыша": return_value,
-        #     "исход": exodus_
-        #
-        # })
+        SportsBetting.append({
+            "код ставки": id,
+            "дата": data_day,
+            "время": data_time,
+            "название команды-победителя": selectionname,
+            "коэффициент": row_odds,
+            "название команд общее": row_eventname,
+            "победа/поражение": game_or_not,
+            "сумма ставки": value_bet,
+            "сумма выигрыша": return_value,
+            "исход": exodus_,
 
-
+        })
 
         google_table(line_for_google, id, data_day, data_time, selectionname, row_odds, row_eventname,
-                     game_or_not, value_bet, return_value, exodus_,
-                     my_logs_data[0], my_logs_data[1], my_logs_data[2],
-                     my_logs_data[3], my_logs_data[4], my_logs_data[5],
-                     my_logs_data[6], my_logs_data[7], my_logs_data[8],
-                     my_logs_data[9], my_logs_data[10], my_logs_data[11])
+                     game_or_not, value_bet, return_value, exodus_)
         line_for_google+=1
-
+#
 # with open(f"mega.json", "w", encoding="utf-8") as file:
 #     json.dump(SportsBetting, file, indent=4, ensure_ascii=False)
-
-
+#
+#
 

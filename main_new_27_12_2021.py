@@ -2,7 +2,6 @@ from chrome_driver import GetWorkAccountsList, FireFoxDriverMainNoAutoOpen
 from time import sleep
 import time
 import info
-import work_with_my_logs
 from bs4 import BeautifulSoup
 import conversion_val
 from multiprocessing.dummy import Pool
