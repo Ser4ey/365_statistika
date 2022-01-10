@@ -49,7 +49,63 @@ class LogWorker:
 
 logWorker1 = LogWorker('logFile.txt')
 
-# logWorker1.write_row_in_log_file([1,2,3,'dd'])
-# logWorker1.get_all_log_data()
+
+class WorkWithLog:
+    '''Сопастовляет ставке результат из логов'''
+    def __init__(self, cleaned_logs):
+        # переворачиваем логи, чтоб они шли от новых к старым
+        self.logs = cleaned_logs[::-1]
+
+    def get_team1_and_team2(self, game_name):
+        team_list = game_name.split(' vs ')
+        if len(team_list) < 2:
+            print(f'Ошибка при получении команд из: {game_name}')
+            return '@@@@@', '@@@@@'
+        return team_list[0], team_list[1]
+
+
+    def get_log_string_by_game_name(self, game_name):
+        '''Принимает называние игры а возвращает данные из логов'''
+        log_data_string = {
+            "БК1": 'не найдено',
+            "БК2": 'не найдено',
+            "коэффициент на БК2": 'не найдено',
+            "количество инициаторов на БК1": 'не найдено',
+            "количество инициаторов на БК2": 'не найдено',
+        }
+
+
+        del_counter = 'no'
+        for i in range(min(len(self.logs), 30)):
+            game_name_in_log_string = self.logs[i]['BK1_game_name']
+            team1, team2 = self.get_team1_and_team2(game_name_in_log_string)
+            print(team1, team2, game_name)
+            if (team1 in game_name) and (team2 in game_name):
+                del_counter = i
+                break
+
+        if del_counter == 'no':
+            print('Ставка не найдена')
+            return log_data_string
+
+        log_string = self.logs[del_counter]
+        self.logs = self.logs[del_counter+1:]
+
+        log_data_string = {
+            "БК1": log_string['BK1_name'],
+            "БК2": log_string['BK2_name'],
+            "коэффициент на БК2": log_string['BK2_coef'],
+            "количество инициаторов на БК1": log_string['count_of_BK1_plus_forks'],
+            "количество инициаторов на БК2": log_string['count_of_BK2_plus_forks'],
+        }
+        return log_data_string
+
+
+
+log_data = logWorker1.get_all_log_data()
+log_clean_data = [logWorker1.get_info_from_log_string(i) for i in log_data]
+
+workWithLog1 = WorkWithLog(log_clean_data)
+
 
 

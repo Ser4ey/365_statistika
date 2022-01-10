@@ -10,6 +10,7 @@ import httplib2
 from googleapiclient import discovery
 from oauth2client.service_account import ServiceAccountCredentials
 
+from logger_file import workWithLog1
 
 def log_in_driver(driver_class):
     login = driver_class.bet365_login
@@ -401,6 +402,20 @@ for link1 in link_list:
     if id == 'Элемент не найден':
         print('Задание не действительно')
     else:
+        # получение данных из логов
+        data_from_log = workWithLog1.get_log_string_by_game_name(row_eventname)
+
+        bk1 = data_from_log['БК1']
+        bk2 = data_from_log['БК2']
+        bk2_coef = data_from_log["коэффициент на БК2"]
+        number_of_initiator_bk1 = data_from_log['количество инициаторов на БК1']
+        number_of_initiator_bk2 = data_from_log['количество инициаторов на БК2']
+
+        print(bk1)
+        print(bk2)
+        print(bk2_coef)
+        print(number_of_initiator_bk1)
+        print(number_of_initiator_bk2)
 
         SportsBetting.append({
             "код ставки": id,
@@ -417,7 +432,8 @@ for link1 in link_list:
         })
 
         google_table(line_for_google, id, data_day, data_time, selectionname, row_odds, row_eventname,
-                     game_or_not, value_bet, return_value, exodus_)
+                     game_or_not, value_bet, return_value, exodus_, bk1, bk2, bk2_coef, number_of_initiator_bk1,
+                     number_of_initiator_bk2)
         line_for_google+=1
 #
 # with open(f"mega.json", "w", encoding="utf-8") as file:
