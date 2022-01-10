@@ -79,7 +79,7 @@ class WorkWithLog:
         for i in range(min(len(self.logs), 30)):
             game_name_in_log_string = self.logs[i]['BK1_game_name']
             team1, team2 = self.get_team1_and_team2(game_name_in_log_string)
-            print(team1, team2, game_name)
+            print(team1,'+', team2,'=', game_name)
             if (team1 in game_name) and (team2 in game_name):
                 del_counter = i
                 break

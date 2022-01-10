@@ -188,8 +188,9 @@ a = A[-1] + '/' + A[-2]+ '/' + A[-3]
 today = datetime.datetime.now().date()
 
 # При ошибке увеличте значение переменной ниже на 1
-d = datetime.timedelta(days = 1)
-data_today = today - d
+# d = datetime.timedelta(days = 1)
+# data_today = today - d
+data_today = today
 data_today = str(data_today)
 A = data_today.split('-')
 data_today = A[-1] + '/' + A[-2]+ '/' + A[-3]
