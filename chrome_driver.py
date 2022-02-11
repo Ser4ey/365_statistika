@@ -2289,6 +2289,7 @@ class GetWorkAccountsList:
             driver.set_page_load_timeout(15)
             try:
                 driver.get('https://www.bet365.com/')
+                input('Пройдите прокси, затем нажмите Enter:')
                 driver.set_page_load_timeout(25)
                 if check_bet365(driver):
                     return driver, 'OK'
