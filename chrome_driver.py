@@ -2288,8 +2288,16 @@ class GetWorkAccountsList:
             driver.get('https://2ip.ru/')
             driver.set_page_load_timeout(15)
             try:
-                driver.get('https://www.bet365.com/')
+                driver.get('https://www.bet365.com/#/HO/')
+                # соглащаемся с cookies
+                try:
+                    time.sleep(10)
+                except:
+                    input('Пройдите прокси, затем нажмите Enter:')
                 input('Пройдите прокси, затем нажмите Enter:')
+
+                driver.find_element_by_class_name('ccm-CookieConsentPopup_Accept ').click()
+
                 driver.set_page_load_timeout(25)
                 if check_bet365(driver):
                     return driver, 'OK'
@@ -2358,6 +2366,131 @@ class GetWorkAccountsList:
 
     def return_Browser_List(self):
         return self.Browser_List
+
+
+class GetWorkAccountWithHands:
+    def __init__(self, login='', password=''):
+        self.firefox_profile = info.firefox_profile_path
+        self.work_account = 'no'
+        self.login = login
+        self.password = password
+
+    def get_driver(self):
+        firefox_capabilities = webdriver.DesiredCapabilities.FIREFOX
+        firefox_capabilities['marionette'] = True
+
+        fp = webdriver.FirefoxProfile(self.firefox_profile)
+        fp.set_preference("browser.privatebrowsing.autostart", True)
+
+        options = webdriver.FirefoxOptions()
+        options.add_argument("-private")
+        options.set_preference("dom.webdriver.enabled", False)
+        options.set_preference("dom.webnotifications.enabled", False)
+        binary = info.firefox_binary
+        options.binary = binary
+
+        driver = webdriver.Firefox(capabilities=firefox_capabilities, firefox_profile=fp,
+                                   firefox_binary=info.firefox_binary,
+                                   executable_path=info.path_to_geckodriver,
+                                   options=options)
+
+        time.sleep(10)
+
+        driver.get('https://2ip.ru/')
+        driver.set_page_load_timeout(15)
+
+        driver.get('https://www.bet365.com/#/HO/')
+
+        res = input('Откройте сайт вручную и нажмите Enter. Если возникли проблемы введите: 0')
+
+        if res == '0':
+            print('Перезапуск браузера')
+            driver.close()
+            driver.quit()
+            return self.get_driver()
+        else:
+            return driver
+
+    def log_in_bet365_v2(self):
+        login = self.login
+        password = self.password
+
+        for i in range(2):
+            try:
+                try:
+                    time.sleep(2)
+                    self.driver.find_element_by_class_name('hm-MainHeaderRHSLoggedOutWide_LoginContainer')
+                    break
+                except:
+                    print('refresh')
+                    self.driver.get('https://www.bet365.com/')
+            except:
+                pass
+
+        print(f'Вход в аккаунт: {login}')
+        time.sleep(1.5)
+        # вход в аккаунт bet365ru
+        try:
+            self.driver.find_element_by_class_name('hm-MainHeaderRHSLoggedOutWide_LoginContainer').click()
+        except:
+            return f'Не удалось войти в аккаунт {login}!'
+
+        time.sleep(2)
+        for i in range(10):
+            try:
+                self.driver.find_element_by_class_name('lms-StandardLogin_Username').send_keys(login)
+                time.sleep(0.7)
+                self.driver.find_element_by_class_name('lms-StandardLogin_Password').send_keys(password)
+                time.sleep(0.7)
+                break
+            except:
+                time.sleep(1)
+                print(f'Не удалось войти в аккаунт {login}')
+                return f'Не удалось войти в аккаунт {login}'
+
+        # new class: 'lms-LoginButton' accept-button
+        self.driver.find_element_by_class_name('lms-LoginButton').click()
+        time.sleep(3)
+
+        # закрываем новое окно 4 дек 2021
+        try:
+            time.sleep(3)
+            print('Close window!')
+            frame = self.driver.find_element_by_class_name('lp-UserNotificationsPopup_Frame ')
+            self.driver.switch_to.frame(frame)
+            # print('open page')
+            self.driver.find_element_by_class_name('accept-button').click()
+        except Exception as er:
+            print(er)
+            pass
+        finally:
+            self.driver.switch_to.default_content()
+
+        # закрываем окно с почтой
+        try:
+            time.sleep(3)
+            frame = self.driver.find_element_by_class_name('lp-UserNotificationsPopup_Frame')
+            self.driver.switch_to.frame(frame)
+            # print('open page')
+            self.driver.find_element_by_id('RemindMeLater').click()
+        except Exception as er:
+            # print(er)
+            pass
+        finally:
+            self.driver.switch_to.default_content()
+
+        try:
+            time.sleep(3)
+            self.driver.find_element_by_class_name('pm-MessageOverlayCloseButton ').click()
+        except:
+            pass
+
+        print(f'Вы успешно вошли в аккаунт {login}')
+        return 'Успешный вход в аккаунт'
+
+
+
+
 
 
 class FireFoxDriverMainNoAutoOpen(FireFoxDriverMain):

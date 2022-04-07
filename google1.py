@@ -9,7 +9,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 # Файл, полученный в Google Developer Console
 CREDENTIALS_FILE = 'creds.json'
 # ID Google Sheets документа (можно взять из его URL)
-spreadsheet_id = '1fmY4uDgyCJRgFi2E35aWbB1sFU_qX2qiUPAVpuTqkYc'
+spreadsheet_id = '1IXg91BEJ2w_yLtIs7ar340u9r6W_jng7tAZRv8eYEo0'
 
 # Авторизуемся и получаем service — экземпляр доступа к API
 credentials = ServiceAccountCredentials.from_json_keyfile_name(
@@ -21,12 +21,12 @@ httpAuth = credentials.authorize(httplib2.Http())
 service = discovery.build('sheets', 'v4', http = httpAuth)
 
 # Пример чтения файла
-# values = service.spreadsheets().values().get(
-#     spreadsheetId=spreadsheet_id,
-#     range='A1:E10',
-#     majorDimension='COLUMNS'
-# ).execute()
-# pprint(values)
+values = service.spreadsheets().values().get(
+    spreadsheetId=spreadsheet_id,
+    range='A1:E10',
+    majorDimension='COLUMNS'
+).execute()
+pprint(values)
 
 # Пример записи в файл
 
